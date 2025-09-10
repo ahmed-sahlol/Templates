@@ -1,0 +1,108 @@
+struct dsu {
+    vector<int> par, sz, cheack_point;
+    vector<pair<int, int>> upd;
+    int comp;
+
+    dsu() {}
+
+    dsu(int n) {
+        comp = n;
+        par = vector<int>(n + 1);
+        sz = vector<int>(n + 1, 1);
+        iota(par.begin(), par.end(), 0);
+    }
+
+
+    int find(int i) {
+        while (par[i] != i) {
+            i = par[i];
+        }
+        return i;
+    }
+
+    bool merge(int u, int v) {
+        int lead1 = find(u), lead2 = find(v);
+
+        if (lead1 == lead2) return false;
+
+        if (sz[lead1] < sz[lead2]) swap(lead1, lead2);
+
+        upd.emplace_back(lead1, lead2);
+
+        sz[lead1] += sz[lead2];
+        par[lead2] = lead1;
+        comp--;
+
+        return true;
+    }
+
+    void snapshot() { cheack_point.emplace_back(upd.size()); }
+
+    void rollback() {
+        if (cheack_point.size() == 0) return;
+        while (cheack_point.back() != upd.size()) {
+            auto [lead1, lead2] = upd.back();
+            sz[lead1] -= sz[lead2];
+            par[lead2] = lead2;
+            upd.pop_back();
+            comp++;
+        }
+        cheack_point.pop_back();
+    }
+
+    bool sameSet(int u, int v) {
+        return find(u) == find(v);
+    }
+};
+
+struct Dynamic_Connectivity {
+    // segment_tree data
+    int tree_sz;
+    vector<bool> ans;
+    vector<vector<array<int, 2>>> segdata;
+
+    // DS
+    dsu ds;
+
+    Dynamic_Connectivity(int n, int y) {
+        ds = dsu(y);
+        tree_sz = 1;
+        while (tree_sz < n) tree_sz *= 2;
+        segdata.assign(2 * tree_sz, {});
+        ans.assign(2 * tree_sz, 0);
+    }
+
+    void upd(int l, int r, array<int, 2> query, int ni = 0, int lx = 0, int rx = -1) {
+        if (rx == -1) rx = tree_sz;
+        if (l >= rx || lx >= r) return;
+        if (lx >= l && rx <= r) {
+            segdata[ni].push_back(query);
+            return;
+        }
+        int mid = (lx + rx) / 2;
+        upd(l, r, query, 2 * ni + 1, lx, mid);
+        upd(l, r, query, 2 * ni + 2, mid, rx);
+    }
+
+    void build(int ni = 0, int lx = 0, int rx = -1, bool ok = 1) {
+        if (rx == -1) rx = tree_sz;
+
+        bool okprev = ok;
+
+        // add to DS
+        for (auto [u, v]: segdata[ni]) {
+            ds.snapshot();
+            if (!ds.merge(u, v)) ok = 0;
+        }
+
+        if (rx - lx > 1) {
+            int mid = (lx + rx) / 2;
+            build(2 * ni + 1, lx, mid, ok);
+            build(2 * ni + 2, mid, rx, ok);
+        } else ans[lx] = ok;
+
+        // roll back from DS
+        for (auto [u, v]: segdata[ni]) ds.rollback();
+        ok = okprev;
+    }
+};
