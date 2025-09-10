@@ -1,0 +1,59 @@
+const int N = 1e5 + 5;
+int n, q;
+vector<vector<int>> adj(N);
+vector<int> sz(N), big(N), col(N), ans(N);
+vector<vector<pair<int, int>>> Query(N);
+
+
+void dfs0(int u, int p) {
+    sz[u] = 1;
+    for (auto v: adj[u]) {
+        if (v == p) continue;
+        dfs0(v, u);
+        sz[u] += sz[v];
+        if (big[u] == 0 || sz[v] > sz[big[u]]) {
+            big[u] = v;
+        }
+    }
+}
+
+
+void update(int co, int d) {
+    if (d == 1) {
+
+    } else {
+
+    }
+}
+
+void collect(int u, int p, int d) {
+    update(col[u], d);
+    for (auto v: adj[u]) {
+        if (v == p) continue;
+        collect(v, u, d);
+    }
+}
+
+
+void dfs(int u, int p, bool keep) {
+    for (auto v: adj[u]) {
+        if (v == p || v == big[u]) continue;
+        dfs(v, u, false);
+    }
+
+    if (big[u] != 0) dfs(big[u], u, true);
+
+    update(col[u], 1);
+
+    // add light node
+    for (auto v: adj[u]) {
+        if (v == p || v == big[u]) continue;
+        collect(v, u, 1);
+    }
+
+    // answer query
+    for (auto [k, idx]: Query[u]) {
+    }
+
+    if (!keep) collect(u, p, -1);
+}
