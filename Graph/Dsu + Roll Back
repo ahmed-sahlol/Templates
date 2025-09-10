@@ -1,0 +1,54 @@
+struct dsu {
+    vector<int> par, sz, cheack_point;
+    vector<pair<int, int>> upd;
+    int comp;
+
+    dsu(int n) {
+        comp = n;
+        par = vector<int>(n + 1);
+        sz = vector<int>(n + 1, 1);
+        iota(par.begin(), par.end(), 0);
+    }
+
+
+    int find(int i) {
+        while (par[i] != i) {
+            i = par[i];
+        }
+        return i;
+    }
+
+    bool merge(int u, int v) {
+        int lead1 = find(u), lead2 = find(v);
+
+        if (lead1 == lead2) return false;
+
+        if (sz[lead1] < sz[lead2]) swap(lead1, lead2);
+
+        upd.emplace_back(lead1, lead2);
+
+        sz[lead1] += sz[lead2];
+        par[lead2] = lead1;
+        comp--;
+
+        return true;
+    }
+
+    void snapshot() { cheack_point.emplace_back(upd.size()); }
+
+    void rollback() {
+        if (cheack_point.size() == 0) return;
+        while (cheack_point.back() != upd.size()) {
+            auto [lead1, lead2] = upd.back();
+            sz[lead1] -= sz[lead2];
+            par[lead2] = lead2;
+            upd.pop_back();
+            comp++;
+        }
+        cheack_point.pop_back();
+    }
+
+    bool sameSet(int u, int v) {
+        return find(u) == find(v);
+    }
+};
