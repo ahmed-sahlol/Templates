@@ -1,0 +1,74 @@
+struct Centroid_Decomposition {
+    int n;
+    vector<vector<int>> adj;
+    vector<int> sz, ans;
+    vector<bool> is_deleted;
+
+    Centroid_Decomposition(int N, vector<vector<int>> tree, int root = 1) {
+        n = N;
+        adj = tree;
+        sz.assign(n + 2, 0);
+        ans.assign(n + 2, 0);
+        is_deleted.assign(n + 2, 0);
+        decompose(root);
+    }
+
+    int dfs0(int u, int p) {
+        sz[u] = 1;
+        for (auto v: adj[u]) {
+            if (v == p || is_deleted[v]) continue;
+            sz[u] += dfs0(v, u);
+        }
+        return sz[u];
+    }
+
+    int find_centroid(int u, int p, int tot_sz) {
+        for (auto v: adj[u]) {
+            if (v == p || is_deleted[v] || sz[v] <= tot_sz / 2) continue;
+            return find_centroid(v, u, tot_sz);
+        }
+        return u;
+    }
+
+    /// +1 to add, -1 to delete
+    void upd(int u, int p, int d) {
+        /// update to DS
+
+        for (auto v: adj[u]) {
+            if (v == p || is_deleted[v]) continue;
+            upd(v, u, d);
+        }
+    }
+
+    void calc(int u, int p) {
+        /// calc in DS
+
+        for (auto v: adj[u]) {
+            if (v == p || is_deleted[v]) continue;
+            calc(v, u);
+        }
+    }
+
+    void decompose(int u = 1, int p = -1) {
+        int tot_sz = dfs0(u, p);
+        int curr_centroid = find_centroid(u, u, tot_sz);
+        if (p == -1) p = curr_centroid;
+
+        /// The process part to calculate the desired property
+        upd(curr_centroid, p, 1);
+
+        for (auto v: adj[curr_centroid]) {
+            if (v == p || is_deleted[v]) continue;
+
+        }
+
+        upd(curr_centroid, p, -1);
+
+        /// Delete the current_centroid from the tree and search for the remainings
+        is_deleted[curr_centroid] = 1;
+        for (auto &v: adj[curr_centroid]) {
+            if (is_deleted[v]) continue;
+            decompose(v, curr_centroid);
+        }
+    }
+};
