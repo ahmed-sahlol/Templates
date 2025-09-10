@@ -1,0 +1,38 @@
+int n, m, q;
+    cin >> n >> m >> q;
+    vector<vector<int>> v(n + 1, vector<int>(m + 1, 0));
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= m; ++j)
+            cin >>
+                v[i][j];
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= m; ++j)
+            v[i][j] +=
+                    v[i][j - 1];
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= m; ++j)
+            v[i][j] +=
+                    v[i - 1][j];
+    auto query = [&](int x1, int y1, int x2, int y2) -> int {
+        return v[x2][y2] - v[x2][y1 - 1] - v[x1 - 1][y2] + v[x1 - 1][y1 -
+                                                                     1];
+    };
+    /// ====================================================
+    vector<vector<char>> v(n + 3, vector<char>(m + 3, 0));
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= m; ++j)
+            cin >>
+                v[i][j];
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= m; ++j) {
+            for (int c = 0; c < 26; ++c) {
+                freq[i][j][c] = freq[i - 1][j][c] + freq[i][j - 1][c] -
+                                freq[i - 1][j - 1][c];
+            }
+            freq[i][j][v[i][j] - 'a']++;
+        }
+    }
+    auto query = [&](int x1, int y1, int x2, int y2, int c) -> int {
+        return freq[x2][y2][c] - freq[x2][y1 - 1][c] - freq[x1 - 1][y2][c]
+               + freq[x1 - 1][y1 - 1][c];
+    };
