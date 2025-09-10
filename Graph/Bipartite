@@ -1,0 +1,12 @@
+// init col = 1
+bool Bipartite(int u) {
+    bool ok = 1;
+    for (auto &v: adj[u]) {
+        if (!col[v]) {
+            col[v] = 3 - col[u];
+            ok &= Bipartite(v);
+        } else if (col[v] == col[u]) return 0;
+    }
+    return ok;
+} 
+
