@@ -1,0 +1,108 @@
+struct HLD {
+    vector<int> big, head, par, id, lvl, sz, know;
+    vector<vector<int>> adj;
+    int nxt;
+
+    HLD(int n, vector<vector<int>> &g, int root = 1) {
+        adj = g;
+        big = head = par = id = lvl = know = vector<int>(n + 5, 0);
+        sz = vector<int>(n + 5, 1);
+        dfs0(root, root);
+        head[root] = root;
+        nxt = 0;
+        flatin(root, root);
+    }
+
+    void dfs0(int u, int p) {
+        for (auto v: adj[u]) {
+            if (v == p) continue;
+            par[v] = u;
+            lvl[v] = lvl[u] + 1;
+            dfs0(v, u);
+            sz[u] += sz[v];
+            if (big[u] == 0 || sz[v] > sz[big[u]]) {
+                big[u] = v;
+            }
+        }
+    }
+
+    void flatin(int u, int p) {
+        id[u] = nxt;
+        know[nxt++] = u;
+        // heavy
+        if (big[u] != 0) {
+            head[big[u]] = head[u];
+            flatin(big[u], u);
+        }
+        // light
+        for (auto v: adj[u]) {
+            if (v == p || v == big[u]) continue;
+            head[v] = v;
+            flatin(v, u);
+        }
+    }
+
+    vector<pair<int, int>> path(int u, int v) {
+        vector<pair<int, int>> res;
+        while (true) {
+            if (head[u] == head[v]) {
+                if (lvl[u] > lvl[v]) swap(u, v);
+                res.emplace_back(id[u], id[v]); // id[u] + 1 when value on edge
+                return res;
+            }
+            if (lvl[head[u]] > lvl[head[v]]) swap(u, v);
+            res.emplace_back(id[head[v]], id[v]);
+            v = par[head[v]];
+        }
+        return res;
+    }
+
+    // Query in path from u to v
+//    pair<int, int> Query(int u, int v) {
+//        Node res = Node();
+//        vector<pair<int, int>> a, b;
+//        while (head[u] != head[v]) {
+//            if (lvl[head[u]] > lvl[head[v]]) {
+//                a.emplace_back(in[head[u]], in[u]);
+//                u = par[head[u]];
+//            } else {
+//                b.emplace_back(in[head[v]], in[v]);
+//                v = par[head[v]];
+//            }
+//        }
+//        if (lvl[u] > lvl[v]) a.emplace_back(in[v], in[u]);
+//        else b.emplace_back(in[u], in[v]);
+//        reverse(a.begin(), a.end());
+//        reverse(b.begin(), b.end());
+//        for (auto i: a) {
+//            Node now = seg.query(i.first, i.second + 1);
+//            res = seg.merge(res, now);
+//        }
+//        swap(res.maxpre, res.maxsuff);
+//        swap(res.minpre, res.minsuff);
+//        for (auto i: b) {
+//            Node now = seg.query(i.first, i.second + 1);
+//            res = seg.merge(res, now);
+//        }
+//        return {res.mn, res.mx};
+//    }
+};
+
+/// from u to v
+vector<pair<int, int>> HLD(int u, int v) {
+    vector<pair<int, int>> a, b;
+    while (head[u] != head[v]) {
+        if (lvl[head[u]] > lvl[head[v]]) {
+            a.emplace_back(in[head[u]], in[u]);
+            u = par[head[u]];
+        } else {
+            b.emplace_back(in[head[v]], in[v]);
+            v = par[head[v]];
+        }
+    }
+    if (lvl[u] > lvl[v]) a.emplace_back(in[v], in[u]);
+    else b.emplace_back(in[u], in[v]);
+    reverse(b.begin(), b.end());
+    for (auto x: a)b.push_back(x);
+    return b;
+}
