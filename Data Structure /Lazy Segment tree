@@ -1,0 +1,123 @@
+struct Node {
+    int val;
+    int lazy;
+    bool is_lazy;
+
+    Node() {
+        val = 0;
+        lazy = 0;
+        is_lazy = 0;
+    }
+
+    Node(int x) {
+        val = x;
+        lazy = 0;
+        is_lazy = 0;
+    }
+
+    void change(int x, int lx, int rx) {
+        val = x;
+        lazy = x;
+        is_lazy = 1;
+    }
+};
+
+struct sagara {
+    vector<Node> segdata;
+    int tree_size;
+
+    sagara(int n) {
+        tree_size = 1;
+        while (tree_size < n) tree_size *= 2;
+        segdata.assign(2 * tree_size, Node());
+    }
+
+    Node merge(Node &lf, Node &ri) {
+        Node ans = Node();
+        ans.val = lf.val + ri.val;
+        return ans;
+    }
+
+    void propagate(int ni, int lx, int rx) {
+        if (rx - lx == 1 || segdata[ni].is_lazy == 0) return;
+        int mid = (lx + rx) / 2;
+        segdata[2 * ni + 1].change(segdata[ni].lazy, lx, mid);
+        segdata[2 * ni + 2].change(segdata[ni].lazy, mid, rx);
+        segdata[ni].is_lazy = 0;
+        segdata[ni].lazy = 0;
+    }
+
+    Node query2(int pos, int ni, int lx, int rx) {
+        propagate(ni, lx, rx);
+        if (rx - lx == 1) return segdata[ni];
+        int mid = (lx + rx) / 2;
+        if (mid <= pos)return query2(pos, 2 * ni + 2, mid, rx);
+        else return query2(pos, 2 * ni + 1, lx, mid);
+    }
+
+    Node query2(int pos) {
+        return query2(pos, 0, 0, tree_size);
+    }
+
+    Node query(int l, int r, int ni, int lx, int rx) {
+        propagate(ni, lx, rx);
+        if (l >= rx || lx >= r) return Node();
+        if (lx >= l && r >= rx) return segdata[ni];
+        int mid = (lx + rx) / 2;
+        Node lf = query(l, r, 2 * ni + 1, lx, mid);
+        Node ri = query(l, r, 2 * ni + 2, mid, rx);
+        return merge(lf, ri);
+    }
+
+    Node query(int l, int r) {
+        return query(l, r, 0, 0, tree_size);
+    }
+
+    void update(int l, int r, int val, int ni, int lx, int rx) {
+        propagate(ni, lx, rx);
+        if (l >= rx || lx >= r) return;
+        if (lx >= l && r >= rx) {
+            segdata[ni].change(val, lx, rx);
+            return;
+        }
+        int mid = (lx + rx) / 2;
+        update(l, r, val, 2 * ni + 1, lx, mid);
+        update(l, r, val, 2 * ni + 2, mid, rx);
+        segdata[ni] = merge(segdata[2 * ni + 1], segdata[2 * ni + 2]);
+    }
+
+    void update(int l, int r, int val) {
+        update(l, r, val, 0, 0, tree_size);
+    }
+
+    void set(int idx, int val, int ni, int lx, int rx) {
+        propagate(ni, lx, rx);
+        if (rx - lx == 1) {
+            segdata[ni].change(val, lx, rx);
+            return;
+        }
+        int mid = (lx + rx) / 2;
+        if (idx >= mid) set(idx, val, 2 * ni + 2, mid, rx);
+        else set(idx, val, 2 * ni + 1, lx, mid);
+        segdata[ni] = merge(segdata[2 * ni + 1], segdata[2 * ni + 2]);
+    }
+
+    void set(int idx, int val) {
+        set(idx, val, 0, 0, tree_size);
+    }
+
+    void init(vector<long long> &arr, long long ni, long long lx, long long rx) {
+        if (rx - lx == 1) {
+            if (lx < arr.size())segdata[ni] = Node(arr[lx]);
+            return;
+        }
+        long long mid = (rx + lx) >> 1;
+        init(arr, 2 * ni + 1, lx, mid);
+        init(arr, 2 * ni + 2, mid, rx);
+        segdata[ni] = merge(segdata[2 * ni + 1], segdata[2 * ni + 2]);
+    }
+
+    void init(vector<long long> &arr) {
+        init(arr, 0, 0, tree_size);
+    }
+};
