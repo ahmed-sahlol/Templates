@@ -1,0 +1,13 @@
+int n, q, timer;
+vector<vector<int>> adj;
+vector<int> in, out, lvl;
+
+void dfs0(int u, int p) {
+    in[u] = timer++;
+    for (auto v: adj[u]) {
+        if (v == p) continue;
+        lvl[v] = lvl[u] + 1;
+        dfs0(v, u);
+    }
+    out[u] = timer - 1;
+}
