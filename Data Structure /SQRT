@@ -1,0 +1,41 @@
+struct Sqrt {
+    vector<int> arr;
+    vector<int> blocks;
+    int SQ;
+
+    Sqrt(int n, vector<int> &v) {
+        SQ = sqrt(n);
+        arr = v;
+        blocks.assign(SQ + 3, 0);
+        for (int i = 0; i < n; ++i) blocks[i / SQ] += arr[i];
+    }
+
+    int merge(int a, int b) {
+        return a + b;
+    }
+
+    void update(int idx, int val) {
+        int L = idx - idx % SQ, R = L + SQ - 1, num_block = idx / SQ;
+        arr[idx] = val;
+        int ret = 0;
+        for (int j = L; j <= R; ++j) {
+            ret = merge(ret, arr[j]);
+        }
+        // update block
+        blocks[num_block] = ret;
+    }
+    // base 0 [l,r]
+    int query(int l, int r) {
+        int ret = 0;
+        while (l <= r) {
+            if (l % SQ == 0 && l + SQ <= r) {
+                ret = merge(ret, blocks[l / SQ]);
+                l += SQ;
+            } else {
+                ret = merge(ret, arr[l]);
+                l++;
+            }
+        }
+        return ret;
+    }
+};
