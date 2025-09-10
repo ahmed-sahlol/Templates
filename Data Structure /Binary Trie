@@ -1,0 +1,103 @@
+struct Node {
+    int ch[2] = {-1, -1};
+    int freq[2] = {0, 0};
+    int sz = 0;
+
+    int &operator[](int x) {
+        return ch[x];
+    }
+};
+
+struct BT {
+    int BASE;
+
+    vector<Node> nodes;
+
+    int new_node() { return nodes.emplace_back(), nodes.size() - 1; }
+
+    BT(int base = 33) : BASE(base) { nodes.clear(), new_node(); }
+
+    void update(int val, int op) {
+        int u = 0;
+        for (int i = BASE - 1; i >= 0; --i) {
+            int v = val >> i & 1;
+            if (!~nodes[u][v]) {
+                int ch = new_node();
+                nodes[u][v] = ch;
+            }
+            nodes[u].freq[v] += op;
+            nodes[u].sz += op;
+            u = nodes[u][v];
+        }
+        nodes[u].sz += op;
+        nodes[u].freq[val & 1] += op;
+    }
+
+    bool find(int val) {
+        int u = 0;
+        for (int i = BASE - 1; i >= 0; --i) {
+            int v = val >> i & 1;
+            if (nodes[u].freq[v] == 0) return 0;
+            u = nodes[u][v];
+        }
+        return 1;
+    }
+
+    int get_min_xor(int val) {
+        int u = 0, ans = 0;
+        for (int i = BASE - 1; i >= 0; --i) {
+            int v = (val >> i & 1);
+            if (nodes[u].freq[v] > 0) {
+                u = nodes[u][v];
+            } else {
+                ans |= (1LL << i);
+                u = nodes[u][!v];
+            }
+            if (u == -1) return ans;
+        }
+        return ans;
+    }
+
+    int get_max_xor(int val) {
+        int u = 0, ans = 0;
+        for (int i = BASE - 1; i >= 0 && ~u; --i) {
+            int v = ((val >> i & 1) ^ 1);
+            if (nodes[u].freq[v] != 0) {
+                ans |= (1LL << i);
+                u = nodes[u][v];
+            } else {
+                u = nodes[u][!v];
+            }
+        }
+        return ans;
+    }
+
+    /// Count the number of integers such that a[i] XOR num <= l
+    int query_less(int num, int k) {
+        int u = 0, ans = 0;
+        for (int i = BASE - 1; i >= 0 && ~u; --i) {
+            int btn = num >> i & 1;
+            int btk = k >> i & 1;
+            if (btk) {
+                ans += nodes[u].freq[btn];
+                u = nodes[u][!btn];
+            } else u = nodes[u][btn];
+        }
+        return ans + (~u ? nodes[u].sz : 0);
+    }
+
+    /// Count the number of integers such that a[i] XOR num >= l
+    int query_max(int num, int k) {
+        int u = 0, ans = 0;
+        for (int i = BASE - 1; i >= 0 && ~u; --i) {
+            int btn = num >> i & 1;
+            int btk = k >> i & 1;
+            if (btk) u = nodes[u][!btn];
+            else {
+                ans += nodes[u].freq[!btn];
+                u = nodes[u][btn];
+            }
+        }
+        return ans + (~u ? nodes[u].sz : 0);
+    }
+};
