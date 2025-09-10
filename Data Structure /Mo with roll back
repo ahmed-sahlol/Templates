@@ -1,0 +1,82 @@
+#include <bits/stdc++.h>
+
+#define int long long
+
+#define el '\n'
+
+using namespace std;
+
+const int N = 1e5 + 5;
+int v[N], Fst[N], Lst[N];
+
+void work() {
+    int n, m, q;
+    cin >> n >> m >> q;
+    for (int i = 0; i < n; ++i) cin >> v[i];
+    int SQ = sqrtl(n) + 1;
+    memset(Fst, -1, sizeof Fst);
+    vector<int> ret(q);
+    vector<array<int, 3>> blk[SQ + 1];
+    for (int i = 0; i < q; ++i) {
+        int l, r;
+        cin >> l >> r;
+        l--, --r;
+        if (r - l + 1 > SQ) {
+            blk[l / SQ].push_back({r, l, i});
+            continue;
+        }
+        int ans = 0;
+        for (int j = l; j <= r; ++j) {
+            int val = v[j];
+            if (!~Fst[val]) Fst[val] = j;
+            ans = max(ans, j - Fst[val]);
+        }
+        ret[i] = ans;
+        for (int j = l; j <= r; ++j) Fst[v[j]] = -1;
+    }
+    for (int i = 0; i < SQ; ++i) {
+        if (blk[i].size() == 0) continue;
+        sort(blk[i].begin(), blk[i].end());
+        memset(Fst, -1, sizeof Fst);
+        int r = (i + 1) * SQ - 2, ans = 0;
+        for (const auto [rq, lq, idx]: blk[i]) {
+            while (r < rq) {
+                ++r;
+                int val = v[r];
+                if (!~Fst[val]) Fst[val] = r;
+                Lst[val] = r;
+                ans = max(ans, Lst[val] - Fst[val]);
+            }
+            vector<array<int, 3>> upd; 
+            /// sanpshot
+            int l = (i + 1) * SQ - 1, ans2 = ans;
+            while (l > lq) {
+                --l;
+                int val = v[l];
+                upd.push_back({val, Fst[val], Lst[val]});
+                if (!~Fst[val]) Lst[val] = l;
+                Fst[val] = l;
+                ans2 = max(ans2, Lst[val] - Fst[val]);
+            }
+            ret[idx] = ans2;
+            reverse(upd.begin(), upd.end()); 
+            /// roll back
+            for (auto [val, st, ed]: upd) {
+                Fst[val] = st, Lst[val] = ed;
+            }
+
+        }
+    }
+    for (auto i: ret) cout << i << el;
+}
+
+int32_t main() {
+    ios_base::sync_with_stdio(0);
+    cin.tie(0), cout.tie(0);
+    int tc = 1;
+//    cin >> tc;
+    for (int T = 1; T <= tc; ++T) {
+//        cout << "Case " << T << ": ";
+        work();
+    }
+}
