@@ -1,0 +1,21 @@
+const int N = 1000, oo = 1e18;
+
+int n, m, floyd[N][N];
+
+void inti() {
+    for (int i = 0; i < n; i++)for (int j = 0; j < n; j++) floyd[i][j] = (i == j ? 0 : oo);
+}
+
+void build() {
+    for (int k = 0; k < n; k++) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                floyd[i][j] = min(floyd[i][j], floyd[i][k] + floyd[k][j]);
+                floyd[i][j] = min(floyd[i][j], max(floyd[i][k], floyd[k][j])); // minmax
+                floyd[i][j] = max(floyd[i][j], min(floyd[i][k], floyd[k][j])); // maxmin
+                floyd[i][j] = max(floyd[i][j], max(floyd[i][k], floyd[k][j])); // longestpath with no cycle
+                floyd[i][j] += floyd[i][k] * floyd[k][j]; // countpath
+            }
+        }
+    }
+}
