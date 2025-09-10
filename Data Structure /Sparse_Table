@@ -1,0 +1,48 @@
+template<typename T = int>
+struct Sparse_Table {
+
+    vector<vector<T> > table;
+    vector<int> Bin_Log;
+    int n, LOG;
+
+    Sparse_Table(vector<T> &vec) {
+        n = vec.size();
+        LOG = __lg(n) + 1;
+        table.resize(n + 10, vector<T>(LOG));
+        Bin_Log.resize(n + 10);
+        for (int i = 2; i <= n; i++)
+            Bin_Log[i] = Bin_Log[i >> 1] + 1;
+        for (int i = 0; i < n; i++)
+            table[i][0] = vec[i];
+        Build_Table();
+    }
+
+    T operation(T a, T b) {
+        return max(a, b);
+    }
+
+    void Build_Table() {
+        for (int log = 1; log < LOG; log++)
+            for (int i = 0; i + (1 << log) - 1 < n; i++)
+                table[i][log] = operation(table[i][log - 1], table[i + (1 << (log - 1))][log - 1]);
+    }
+
+    // No overcount O(log(n))
+    T query1(int l, int r) {
+        if (r < l) return LLONG_MIN;
+        T ret = LLONG_MIN;
+        for (int i = 0; i < 22; i++) {
+            if (((r - l + 1) >> i) & 1) {
+                return merge(query1(l + (1 << i), r), table[l][i]);
+            }
+        }
+        return ret;
+    }
+
+    // have overcount O(1) but need preCount()
+    // use this for [min, max, or ,and, gcd, lcm] in O(1) time
+    T query2(int L, int R) {
+        int log = Bin_Log[R - L + 1];
+        return operation(table[L][log], table[R - (1 << log) + 1][log]);
+    }
+};
