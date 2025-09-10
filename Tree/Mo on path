@@ -1,0 +1,140 @@
+#include <bits/stdc++.h>
+
+#define int long long
+
+#define el '\n'
+
+using namespace std;
+
+const int N = 1e5 + 5, SQ = 318, LOG = 19;
+int n, q, val[N], in[N], out[N], know[2 * N + 5], lvl[N], freq_node[N], timer = 0;
+vector<vector<int>> adj(N), up(N, vector<int>(LOG + 3));
+
+void dfs0(int u, int p) {
+    in[u] = timer;
+    know[timer++] = u;
+    for (int i = 1; i < LOG; ++i) up[u][i] = up[up[u][i - 1]][i - 1];
+    for (auto v: adj[u]) {
+        if (v == p) continue;
+        lvl[v] = lvl[u] + 1;
+        up[v][0] = u;
+        // val[u] = v.second in case value on edge
+        dfs0(v, u);
+    }
+    know[timer] = u;
+    out[u] = timer++;
+}
+
+int LCA(int u, int v) {
+    if (lvl[u] < lvl[v]) swap(u, v);
+    int diff = lvl[u] - lvl[v];
+    for (int i = 0; diff; diff >>= 1, ++i) {
+        if (diff & 1) {
+            u = up[u][i];
+        }
+    }
+    if (u == v) return u;
+    for (int i = LOG; i >= 0; --i) {
+        if (up[u][i] != up[v][i]) {
+            u = up[u][i],
+                    v = up[v][i];
+        }
+    }
+    return up[u][0];
+}
+
+struct Query {
+    int l, r, lca, idx;
+
+    Query() {}
+
+    Query(int L, int R, int Lca, int i) : l(L), r(R), lca(Lca),
+                                          idx(i) {}
+
+    bool operator<(Query &qu) const {
+        if ((l / SQ) != (qu.l / SQ)) return (l / SQ) < (qu.l / SQ);
+        return ((l / SQ) & 1 ? r > qu.r : r < qu.r);
+    }
+};
+
+void work() {
+    cin >> n >> q;
+    for (int i = 1; i <= n; ++i) cin >> val[i];
+    for (int i = 2, a; i <= n; ++i) {
+        cin >> a;
+        adj[a].push_back(i);
+        adj[i].push_back(a);
+    }
+    dfs0(1, 1);
+    vector<Query> query(q);
+    vector<int> ret(q, 0);
+    for (int i = 0, u, v; i < q; ++i) {
+        cin >> u >> v;
+        int lca = LCA(u, v);
+        if (in[u] < in[v]) swap(u, v);
+
+        // in case value on edge lca = -1 in all query
+
+        if (lca == v) query[i] = Query(in[v], in[u], -1, i); // in case val on edge in[v] + 1, in[u]
+        else query[i] = Query(out[v], in[u], lca, i);
+    }
+    sort(query.begin(), query.end());
+    vector<int> blk(SQ + 5, 0), freq(N, 0);
+    blk[0] = 1;
+    freq[0] = 1;
+    int mo_l = query[0].l, mo_r = mo_l - 1;
+
+    auto add = [&](int u) {
+        freq[val[u]]++;
+        if (freq[val[u]] == 1) blk[(val[u] / SQ)]++;
+    };
+
+    auto remove = [&](int u) {
+        freq[val[u]]--;
+        if (freq[val[u]] == 0) blk[(val[u] / SQ)]--;
+    };
+
+    auto cheack = [&](int id) {
+        int u = know[id];
+        freq_node[u] ^= 1;
+        if (freq_node[u] == 1) add(u);
+        else remove(u);
+    };
+
+
+    auto get_ans = [&]() {
+        int i = 0;
+        while (blk[i] == SQ)++i;
+        i *= SQ;
+        while (i <= N && freq[i] > 0)++i;
+        return i;
+    };
+
+    for (const auto [l, r, lca, idx]: query) {
+
+        while (mo_l > l) cheack(--mo_l);
+        while (mo_r < r) cheack(++mo_r);
+
+        while (mo_l < l) cheack(mo_l++);
+        while (mo_r > r) cheack(mo_r--);
+
+        if (~lca) add(lca);
+
+        ret[idx] = get_ans();
+
+        if (~lca) remove(lca);
+    }
+
+    for (auto i: ret) cout << i << el;
+}
+
+int32_t main() {
+    ios_base::sync_with_stdio(0);
+    cin.tie(0), cout.tie(0);
+    int tc = 1;
+//    cin >> tc;
+    for (int T = 1; T <= tc; ++T) {
+//        cout << "Case " << T << ": ";
+        work();
+    }
+}
