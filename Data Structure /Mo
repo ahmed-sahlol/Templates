@@ -1,0 +1,38 @@
+const int N = 2e5 + 5, SQ = 449, M = 1e6 + 5;
+
+struct Query {
+    int l, r, idx;
+
+    Query() {}
+
+    Query(int L, int R, int IDX) : l(L), r(R), idx(IDX) {}
+
+    bool operator<(Query &q) const {
+        if ((l / SQ) == (q.l / SQ))
+            return ((l / SQ) & 1 ? r > q.r : r < q.r);
+        return (l / SQ) < (q.l / SQ);
+    }
+};
+
+void work() {
+    int n, q;
+    vector<Query> query;
+    sort(query.begin(), query.end());
+    vector<int> ret(q);
+
+    int ans = 0, l = query[0].l, r = l - 1;
+    auto add = [&](int idx) {
+
+    };
+    auto remove = [&](int idx) {
+
+    };
+
+    for (const auto &[ql, rq, qidx]: query) {
+        while (l > ql) add(--l);
+        while (r < rq) add(++r);
+        while (l < ql) remove(l++);
+        while (r > rq) remove(r--);
+        ret[qidx] = ans;
+    }
+}
