@@ -1,0 +1,12 @@
+vector<long long> phi(N + 5);
+
+void work_phi() {
+    for (long long i = 0; i < N; i++) phi[i] = i;
+    for (long long i = 2; i < N; i++) {
+        if (phi[i] == i) {
+            for (long long j = i; j < N; j += i) {
+                phi[j] -= phi[j] / i;
+            }
+        }
+    }
+}
