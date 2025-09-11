@@ -1,0 +1,26 @@
+const int N = 2e5 + 5, mod = 1e9 + 7;
+
+int Factorial[N];
+
+int mul(int a, int b) { return ((a % mod) * (b % mod)) % mod; }
+
+void generate_fact() {
+    Factorial[0] = 1;
+    for (int i = 1; i < N; ++i) Factorial[i] = mul(i, Factorial[i - 1]);
+}
+
+int fastpower(int a, int b) {
+    if (b == 0) return 1;
+    if (b == 1) return a;
+    int ret = fastpower(a, b / 2);
+    ret = mul(ret, ret);
+    if (b & 1) ret = mul(ret, a);
+    return ret;
+}
+
+int inverse(int a) { return fastpower(a, mod - 2); }
+
+int C(int n, int k) {
+    if (k < 0 || k > n) return 0;
+    return mul(mul(Factorial[n], inverse(Factorial[n - k])), inverse(Factorial[k]));
+}
