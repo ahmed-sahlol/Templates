@@ -1,0 +1,19 @@
+long long fastpower(long a, long b) {
+    if (b == 0) return 1;
+    if (b == 1) return a;
+    long long ret = fastpower(a, b / 2);
+    ret = ret * ret;
+    if (b & 1) ret = ret * a;
+    return ret;
+}
+
+long long mul(long long a, long long b) { return ((a % mod) * (b % mod)) % mod; }
+
+long long fastpowermod(long a, long b) {
+    if (b == 0) return 1;
+    if (b == 1) return a;
+    long long ret = fastpowermod(a, b / 2);
+    ret = mul(ret, ret);
+    if (b & 1) ret = mul(ret, a);
+    return ret;
+}
