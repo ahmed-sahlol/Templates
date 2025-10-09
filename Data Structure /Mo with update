@@ -1,0 +1,28 @@
+vector<deque<int>> freq(n + 5);
+
+    for (auto &i: v)cin >> i;
+    int curr_l = 0, curr_r = -1, tot = 0;
+
+    auto add = [&](int idx, int d) {
+        int me = v[idx];
+        if (freq[me].size() > 1) tot -= freq[me].back() - freq[me].front();
+        if (d) freq[me].push_back(idx);
+        else freq[me].push_front(idx);
+        if (freq[me].size() > 1) tot += freq[me].back() - freq[me].front();
+    };
+
+    auto remove = [&](int idx, int d) {
+        int me = v[idx];
+        if (freq[me].size() > 1) tot -= freq[me].back() - freq[me].front();
+        if (d) freq[me].pop_back();
+        else freq[me].pop_front();
+        if (freq[me].size() > 1) tot += freq[me].back() - freq[me].front();
+    };
+
+    auto upd = [&](int lq, int rq) -> int {
+        while (curr_r < rq) add(++curr_r, 1);
+        while (curr_l > lq) add(--curr_l, 0);
+        while (curr_r > rq) remove(curr_r--, 1);
+        while (curr_l < lq) remove(curr_l++, 0);
+        return tot;
+    };
