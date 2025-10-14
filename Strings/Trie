@@ -1,0 +1,70 @@
+struct Trie {
+    struct Node {
+        Node *arr[26];
+        int pref;
+        bool leaf;
+
+        Node() {
+            memset(arr, 0, sizeof arr);
+            pref = 0;
+            leaf = 0;
+        }
+    };
+
+    Node *root = new Node();
+
+    void insert(string &s) {
+        Node *curr = root;
+        for (auto i: s) {
+            int idx = (i - 'a');
+            if (curr->arr[idx] == 0) curr->arr[idx] = new Node();
+            curr = curr->arr[idx];
+            curr->pref++;
+        }
+        curr->leaf = 1;
+    }
+
+    void remove(string &s, int idx, Node *curr) {
+        if (idx == s.size()) return curr->leaf = false, void();
+        if (curr->arr[s[idx] - 'a'] != 0) {
+            remove(s, idx + 1, curr->arr[s[idx] - 'a']);
+            curr->arr[s[idx] - 'a']->pref--;
+            if (curr->arr[s[idx] - 'a']->pref == 0) {
+                delete curr->arr[s[idx] - 'a'];
+                curr->arr[s[idx] - 'a'] = 0;
+            }
+        }
+    }
+
+    void remove(string &s) { remove(s, 0, root); }
+
+    bool search(string &s) {
+        Node *curr = root;
+        for (auto i: s) {
+            int idx = i - 'a';
+            if (curr->arr[idx] == 0) return 0;
+            curr = curr->arr[idx];
+        }
+        return 1;
+    }
+
+    int count(string &s) {
+        Node *curr = root;
+        for (auto i: s) {
+            int idx = i - 'a';
+            if (curr->arr[idx] == 0) return 0;
+            curr = curr->arr[idx];
+        }
+        return curr->pref;
+    }
+
+    int count_prefix(string &s) {
+        Node *curr = root;
+        for (auto i: s) {
+            int idx = i - 'a';
+            if (curr->arr[idx] == 0) return 0;
+            curr = curr->arr[idx];
+        }
+        return curr->pref;
+    }
+};
