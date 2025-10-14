@@ -93,4 +93,15 @@ struct Suffix_array {
     int LCP(int i, int j) {
         return query(min(c[i], c[j]) + 1, max(c[i], c[j]));
     }
+
+    int compare_substring(pair<int, int> a, pair<int, int> b) {
+        int l1 = a.first, r1 = a.second;
+        int l2 = b.first, r2 = b.second;
+        int k = min({LCP(l1, l2), r1 - l1 + 1, r2 - l2 + 1});
+        l1 += k, l2 += k;
+        if (l1 > r1 and l2 > r2) return 0;
+        if (l1 > r1) return -1;
+        if (l2 > r2) return 1;
+        return (s[l1] > s[l2] ? 1 : -1);
+    }
 };
