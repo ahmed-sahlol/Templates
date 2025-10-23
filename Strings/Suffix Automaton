@@ -1,9 +1,9 @@
 struct SuffixAutomaton {
     struct state {
-        int len, link, cnt;
+        int len, link, cnt, first_pos;
         map<char, int> next;
 
-        state() { len = cnt = 0, link = -1; }
+        state() { len = cnt = 0, link = first_pos = -1; }
     };
 
     vector<state> st;
@@ -19,6 +19,7 @@ struct SuffixAutomaton {
         st.emplace_back();
         int cur = st.size() - 1;
         st[cur].len = st[lst].len + 1;
+        st[cur].first_pos = st[cur].len - 1;
         st[cur].cnt = 1;
 
         int p;
@@ -42,6 +43,7 @@ struct SuffixAutomaton {
         st.emplace_back(st[q]);
         int clone = st.size() - 1;
         st[clone].len = st[p].len + 1;
+        st[clone].first_pos = st[q].first_pos;
         st[clone].cnt = 0;
 
         for (; p != -1 && st[p].next[c] == q; p = st[p].link)
@@ -91,6 +93,17 @@ struct SuffixAutomaton {
             if (st[i].link != -1) tot -= st[st[i].link].len;
         }
         return tot;
+    }
+
+    /// find first occurance of substring s
+    int first_occurrence(string s) const {
+        int v = 0;
+        for (char c: s) {
+            if (!st[v].next.count(c))
+                return -1;
+            v = st[v].next.at(c);
+        }
+        return st[v].first_pos - s.size() + 1;
     }
 
     /// match_lengths: for each i, max length of substring ending at i in s that appears in original
