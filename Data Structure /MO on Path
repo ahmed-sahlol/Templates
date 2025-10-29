@@ -1,0 +1,124 @@
+int SQ = 318;
+ 
+struct MO_TREE {
+    struct Query {
+        int l, r, lca, idx;
+ 
+        Query() {}
+ 
+        Query(int L, int R, int Lca, int IDX) : l(L), r(R), lca(Lca), idx(IDX) {}
+ 
+        bool operator<(Query &q) const {
+            if ((l / SQ) == (q.l / SQ)) return ((l / SQ) & 1 ? r > q.r : r < q.r);
+            return (l / SQ) < (q.l / SQ);
+        }
+    };
+ 
+    int N, Q, LOG, timer;
+    vector<vector<int>> adj, up;
+    vector<int> val, in, out, know, lvl, Freq_node, ans;
+    vector<Query> query;
+ 
+    vector<int> freq;
+    bitset<100003> dp;
+ 
+    MO_TREE() {}
+ 
+    MO_TREE(vector<vector<int>> tree, vector<int> values, int q, int root = 1) {
+        N = tree.size();
+        Q = q;
+        adj = tree, val = values;
+        LOG = __lg(N) + 1;
+        ans.assign(Q, 0);
+        up.assign(N + 2, vector<int>(LOG + 3));
+        SQ = sqrtl(2 * N) + 1;
+        dp[0] = 1;
+        in = out = Freq_node = lvl = vector<int>(N + 5);
+        know = vector<int>(2 * N + 5);
+        timer = 0;
+        freq.assign(N + 3, 0);
+        dfs0(root, root);
+    }
+ 
+    void dfs0(int u, int p) {
+        know[timer] = u;
+        in[u] = timer++;
+        for (int i = 1; i < LOG; ++i)
+            up[u][i] = up[up[u][i - 1]][i - 1];
+        for (auto v: adj[u]) {
+            if (v == p) continue;
+            up[v][0] = u;
+            lvl[v] = lvl[u] + 1;
+            dfs0(v, u);
+        }
+        know[timer] = u;
+        out[u] = timer++;
+    }
+ 
+    int LCA(int u, int v) {
+        if (lvl[u] < lvl[v]) swap(u, v);
+        int diff = lvl[u] - lvl[v];
+        for (int i = 0; diff; diff >>= 1, i++) {
+            if (diff & 1)
+                u = up[u][i];
+        }
+        if (u == v) return u;
+        for (int i = LOG - 1; i >= 0; --i) {
+            if (up[u][i] != up[v][i])
+                u = up[u][i], v = up[v][i];
+        }
+        return up[u][0];
+    }
+ 
+    void get_query() {
+        for (int i = 0, u, v; i < Q; ++i) {
+            cin >> u >> v;
+            int lca = LCA(u, v);
+            if (in[v] > in[u]) swap(u, v);
+            if (lca == v) query.push_back(Query(in[v], in[u], -1, i));
+            else query.push_back(Query(out[v], in[u], lca, i));
+        }
+        sort(query.begin(), query.end());
+        process();
+    }
+ 
+    /// add function
+    void add(int node) {
+        int num = val[node];
+        if (num > N) return;
+        if (freq[num] == 0)dp[num] = 1;
+        freq[num]++;
+    }
+ 
+    /// remove function
+    void remove(int node) {
+        int num = val[node];
+        if (num > N) return;
+        freq[num]--;
+        if (freq[num] == 0) dp[num] = 0;
+    }
+ 
+    void upd(int id) {
+        int node = know[id];
+        Freq_node[node] ^= 1;
+        if (Freq_node[node] == 1)add(node);
+        else remove(node);
+    }
+ 
+    int get() {
+        return (~dp)._Find_first() - 1;
+    }
+ 
+    void process() {
+        int l = query[0].l, r = query[0].l - 1;
+        for (const auto &[lq, rq, qlca, qidx]: query) {
+            while (l > lq) upd(--l);
+            while (r < rq) upd(++r);
+            while (l < lq) upd(l++);
+            while (r > rq) upd(r--);
+            if (~qlca) add(qlca);
+            ans[qidx] = get();
+            if (~qlca) remove(qlca);
+        }
+    }
+};
