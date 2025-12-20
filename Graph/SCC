@@ -1,0 +1,48 @@
+struct SCC {
+    int N, M;
+    vector<vector<int>> adj, rev_adj, comp;
+    vector<int> out, curr_path, roots;
+    vector<bool> vis;
+
+    SCC(int n, vector<vector<int>> graph) {
+        N = n;
+        adj = graph;
+        rev_adj.assign(N + 5, {});
+        vis.assign(N + 5, 0);
+        roots.assign(N + 5, 0);
+        for (int i = 1; i <= n; ++i)
+            for (auto v: adj[i])
+                rev_adj[v].push_back(i);
+        scc();
+    }
+
+    void dfs0(int u) {
+        vis[u] = 1;
+        for (auto v: adj[u])
+            if (!vis[v]) dfs0(v);
+        out.push_back(u);
+    }
+
+    void dfs1(int u) {
+        vis[u] = 1;
+        for (auto v: rev_adj[u])
+            if (!vis[v]) dfs1(v);
+        curr_path.push_back(u);
+    }
+
+    void scc() {
+        for (int i = 1; i <= N; ++i) if (!vis[i]) dfs0(i);
+
+        vis.assign(N + 5, 0);
+        reverse(out.begin(), out.end());
+
+        for (auto v: out) {
+            if (vis[v]) continue;
+            dfs1(v);
+            comp.push_back(curr_path);
+            int root = *min_element(curr_path.begin(), curr_path.end());
+            for (auto u: curr_path) roots[u] = root;
+            curr_path.clear();
+        }
+    }
+};
