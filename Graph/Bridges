@@ -1,0 +1,55 @@
+struct Bridges {
+    int n, timer;
+    vector<vector<int>> adj, TwoEdgeCC; /// TwoEdgeCC have all node in same cycle each node can get anothers
+    vector<int> tin, low, root; /// tin time in node , low min time i get it,root is parent of TwoEdgeCC
+    vector<array<int, 2>> brdgs; /// brdgs : have all bridges in graph
+    vector<map<int, int>> isBridge;
+    stack<int> st;
+
+    Bridges(int N, vector<vector<int>> graph) {
+        n = N;
+        adj = graph;
+        tin = low = root = vector<int>(n + 5, 0);
+        timer = 1;
+        isBridge.assign(n + 5, {});
+        for (int i = 1; i <= n; ++i)
+            if (!tin[i]) dfs0(i, i);
+    }
+
+    void dfs0(int u, int p) {
+        st.push(u);
+        tin[u] = low[u] = timer++;
+        bool parent_skipped = false;
+        for (auto v: adj[u]) {
+            if (v == p && !parent_skipped) {
+                parent_skipped = true;
+                continue;
+            }
+            if (!tin[v]) dfs0(v, u);
+            low[u] = min(low[u], low[v]);
+            if (low[v] > tin[u]) {
+                brdgs.push_back({min(u, v), max(u, v)});
+                isBridge[u][v] = 1, isBridge[v][u] = 1;
+            }
+        }
+
+        if (low[u] == tin[u]) {
+            TwoEdgeCC.emplace_back();
+            int cur = -1;
+            while (cur != u) {
+                cur = st.top();
+                st.pop();
+                TwoEdgeCC.back().push_back(cur);
+            }
+            for (auto i: TwoEdgeCC.back()) root[i] = TwoEdgeCC.size() - 1;
+        }
+    }
+
+    vector<vector<int>> bridge_tree() {
+        vector<vector<int>> tree(TwoEdgeCC.size() + 1);
+        for (int v = 1; v <= n; v++)
+            for (auto u: adj[v])
+                if (root[v] != root[u]) tree[root[v]].push_back(root[u]);
+        return tree;
+    }
+};
