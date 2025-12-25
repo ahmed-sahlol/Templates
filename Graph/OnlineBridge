@@ -8,6 +8,15 @@ using namespace std;
 
 const int N = 1e5 + 9;
 
+// What Happens When We Add an Edge (a,b)?
+// There are three possibilities:
+//  = a and b are already in the same 2ECC: 
+//  - The edge adds a redundant path (part of a cycle), so it’s not a bridge. The number of bridges stays the same.
+//  = a and b are in different trees (disconnected components): 
+//  - The new edge connects them, becoming a bridge. The number of bridges increases by 1.
+//  = a and b are in the same tree but different 2ECCs: 
+//  - The edge forms a cycle, merging 2ECCs along that cycle. Bridges on that cycle are no longer bridges, reducing the count (usually by 2 or more).
+
 // Given number of nodes n and q queries
 // add edge (u,v)
 // output the bridges in current graph
