@@ -1,0 +1,54 @@
+const int lg = 31;
+struct xorBasis {
+    int sz;
+    array<int, lg> basis;
+
+    xorBasis() {
+        sz = 0;
+        for (int i = 0; i < lg; ++i) basis[i] = 0;
+    }
+
+    bool add(int x) {
+        for (int i = lg - 1; i >= 0; --i) {
+            if (x >> i & 1 ^ 1) continue;
+            if (basis[i] == 0) {
+                basis[i] = x;
+                sz++;
+                return 1;
+            }
+            x ^= basis[i];
+        }
+        return 0;
+    }
+
+    int max_xor() {
+        int ans = 0;
+        for (int i = lg - 1; i >= 0; --i) {
+            if (basis[i] == 0 || (ans >> i & 1))continue;
+            ans ^= basis[i];
+        }
+        return ans;
+    }
+
+    int kth(int k) {
+        if (k > (1LL << sz)) return -1;
+        int ans = 0, c = sz;
+        for (int i = lg - 1; i >= 0; --i) {
+            if (basis[i] == 0) continue;
+            c--;
+            if (ans >> i & 1) {
+                if ((1LL << c) >= k) ans ^= basis[i];
+                else k -= (1LL << c);
+            } else if ((1LL << c) < k) ans ^= basis[i], k -= (1LL << c);
+        }
+        return ans;
+    }
+
+    bool can(int x) {
+        for (int i = lg - 1; i >= 0; --i) {
+            if (x >> i & 1 ^ 1 || basis[i] == 0) continue;
+            x ^= basis[i];
+        }
+        return x == 0;
+    }
+};
