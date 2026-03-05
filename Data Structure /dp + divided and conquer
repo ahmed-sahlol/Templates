@@ -14,20 +14,12 @@ void work() {
 
     int curr_l = 0, curr_r = -1, tot = 0;
 
-    auto calc = [&](int x) -> int { return x * (x - 1) / 2; };
-
     auto add = [&](int idx) {
-        int me = v[idx];
-        tot -= calc(freq[me]);
-        freq[me]++;
-        tot += calc(freq[me]);
+
     };
 
     auto remove = [&](int idx) {
-        int me = v[idx];
-        tot -= calc(freq[me]);
-        freq[me]--;
-        tot += calc(freq[me]);
+
     };
 
     auto upd = [&](int lq, int rq) -> int {
