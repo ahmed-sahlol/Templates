@@ -1,5 +1,5 @@
 /*
- Use Hungarian when:
+ Use Hungarian when (Assignment Problem) :
     - exactly n workers and n tasks
     - each worker does exactly one task
     - just want min cost assignment
