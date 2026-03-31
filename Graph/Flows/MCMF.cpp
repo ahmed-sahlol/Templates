@@ -1,18 +1,12 @@
 struct edge {
     int from, to, cost, cap, flow, backEdge;
 
-    edge() {
-        from = to = cost = cap = flow = backEdge = 0;
-    }
+    edge() { from = to = cost = cap = flow = backEdge = 0; }
 
     edge(int from, int to, int cost, int cap, int flow, int backEdge) :
-            from(from), to(to), cost(cost), cap(cap), flow(flow), backEdge(
-            backEdge) {
-    }
+            from(from), to(to), cost(cost), cap(cap), flow(flow), backEdge(backEdge) {}
 
-    bool operator<(const edge &other) const {
-        return cost < other.cost;
-    }
+    bool operator<(const edge &other) const { return cost < other.cost; }
 };
 
 struct MCMF { //0-based
@@ -34,8 +28,7 @@ struct MCMF { //0-based
         int maxFlow = 0, cost = 0;
         while (true) {
             vector<pair<int, int>> path = spfa();
-            if (path.empty())
-                break;
+            if (path.empty()) break;
             int new_flow = OO;
             for (auto &it: path) {
                 edge &e = adj[it.first][it.second];
@@ -72,8 +65,7 @@ struct MCMF { //0-based
                 prev[e.to] = u;
                 from_edge[e.to] = i;
                 if (state[e.to] == in_queue)continue;
-                if (state[e.to] == finished || (!q.empty() && dis[q.front()] > dis[e.to]))
-                    q.push_front(e.to);
+                if (state[e.to] == finished || (!q.empty() && dis[q.front()] > dis[e.to])) q.push_front(e.to);
                 else q.push_back(e.to);
                 state[e.to] = in_queue;
             }
@@ -87,5 +79,21 @@ struct MCMF { //0-based
         }
         reverse(path.begin(), path.end());
         return path;
+    }
+
+    bool build_path(int v, int dest, vector<int> &current) {
+        current.push_back(v);
+        if (v == dest) return 1;
+        for (auto &e: adj[v]) {
+            if (e.flow > 0 && e.cost >= 0) {
+                e.flow--;
+                if (build_path(e.to, dest, current)) return 1;
+                e.flow++;
+                current.pop_back();
+                return 0;
+            }
+        }
+        current.pop_back();
+        return 0;
     }
 };
