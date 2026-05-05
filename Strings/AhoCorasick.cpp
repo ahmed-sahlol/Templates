@@ -1,76 +1,76 @@
+// Patterns must be distinct
 struct AhoCorasick {
-    /// Modify these values based on input alphabet
-    /// alpha: size of alphabet (26 for lowercase letters)
-    /// first: first character of alphabet ('a' for lowercase letters)
-    enum {
-        alpha = 26, first = 'a'
-    };
+    // Number of nodes & Number of patterns
+    int N, P;
 
-    struct Node {
-        int nxt[alpha]; /// Next state transition for each character
-        int suflink = 0; /// Suffix link points to longest proper suffix
-        int start = -1; /// Start index of pattern in original array
-        int end = -1; /// Index in backup of longest matched suffix pattern
-        int nmatches = 0; ///Count of matched strings ending at this node
-        int lvl = 0;
+    /// Change this for the patterns structure
+    const int A = 26;
+    const char neutral = 'a';
 
-        Node(int v) {
-            memset(nxt, v, sizeof nxt);
-        }
-    };
+    vector<vector<int>> next;
+    vector<int> link, out_link;
+    vector<vector<int>> out;
+//    vector<vector<int>> dp;
 
-    vector<Node> v; /// Stores all nodes of the trie
-    vector<int> backup;
-    /// Stores pattern indices with longest matching suffixes
-    /// Returns -1 if no match exists
-    /// Note: All patterns must be distinct when using backup
+    /*
+     * next : Normal trie links
+     * link : Longest proper prefix equals to this suffix
+     * out_link : First suffix that has a match in it
+     * out : the indices of the matched patterns in this node
+    */
 
-    /// Inserts a pattern into the automaton
-    /// Time: O(|s|) where |s| is pattern length
-    void insert(string &s, int id) {
-        int node = 0;
-        int clvl = 0;
-        for (auto &c: s) {
-            int &m = v[node].nxt[c - first];
-            ++clvl;
-            if (m == -1) {
-                node = m = v.size();
-                v.emplace_back(-1);
-                v.back().lvl = clvl;
-            } else node = m;
-        }
-        if (v[node].end == -1) v[node].start = id;
-        backup.emplace_back(v[node].end);
-        v[node].end = id;
-        v[node].nmatches++;
+    AhoCorasick() : N(0), P(0) { node(); }
+
+    int node() {
+        next.emplace_back(A, 0);
+        link.emplace_back(0);
+        out_link.emplace_back(0);
+        out.emplace_back(0);
+        return N++;
     }
 
-    /// Builds Aho-Corasick automaton from patterns
-    /// Time: O(26N) where N = sum of all pattern lengths
-    /// - Creates suffix links
-    /// - Allows duplicate patterns
-    /// - For large alphabets, split symbols into chunks with sentinel bits
-    AhoCorasick(vector<string> &pat) : v(1, -1) {
-        for (int i = 0; i < pat.size(); ++i)insert(pat[i], i);
-        v[0].suflink = v.size();
-        v.emplace_back(0);
+    inline int get(char c) { return c - neutral; }
+
+    int add_pattern(const string &patt) {
+        int u = 0;
+        for (auto &c: patt) {
+            if (!next[u][get(c)]) next[u][get(c)] = node();
+            u = next[u][get(c)];
+        }
+        out[u].push_back(P);
+        return P++;
+    }
+
+    void compute() {
         queue<int> q;
         q.push(0);
-        while (q.size()) {
-            int node = q.front();
+        while (!q.empty()) {
+            int u = q.front();
             q.pop();
-            int prv = v[node].suflink;
-            for (int i = 0; i < alpha; ++i) {
-                int &x = v[node].nxt[i], y = v[prv].nxt[i];
-                if (x == -1) {
-                    x = y;
-                    continue;
+            for (int c = 0; c < A; ++c) {
+                int v = next[u][c];
+                if (!v) next[u][c] = next[link[u]][c];
+                else {
+                    link[v] = u ? next[link[u]][c] : 0;
+                    out_link[v] = out[link[v]].empty() ? out_link[link[v]] : link[v];
+                    q.push(v);
                 }
-                v[x].suflink = y;
-                (v[x].end == -1 ? v[x].end : backup[v[x].start]) = v[y].end;
-                v[x].nmatches += v[y].nmatches;
-                q.push(x);
             }
         }
+        //dp.assign(N, vector<int>(A, -1));
+    }
+
+//    int advance(int u, char c) {
+//        if (!u || next[u][get(c)]) return next[u][get(c)];
+//        if (~dp[u][get(c)]) return dp[u][get(c)];
+//        int &ret = dp[u][get(c)];
+//        ret = advance(link[u], c);
+//        return ret;
+//    }
+
+    int advance(int u, char c) {
+        while (u && !next[u][get(c)]) u = link[u];
+        u = next[u][get(c)];
+        return u;
     }
 };
