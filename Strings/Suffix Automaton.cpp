@@ -7,6 +7,7 @@ struct SuffixAutomaton {
     };
 
     vector<state> st;
+    vector<int> dp_unique, dp_occ;
     int lst = 0;
 
     SuffixAutomaton(const string &s) {
@@ -99,8 +100,7 @@ struct SuffixAutomaton {
     int first_occurrence(string s) const {
         int v = 0;
         for (char c: s) {
-            if (!st[v].next.count(c))
-                return -1;
+            if (!st[v].next.count(c)) return -1;
             v = st[v].next.at(c);
         }
         return st[v].first_pos - s.size() + 1;
@@ -120,5 +120,64 @@ struct SuffixAutomaton {
             match[i] = l;
         }
         return match;
+    }
+
+    int dfs_unique(int u) {
+        if (~dp_unique[u]) return dp_unique[u];
+        int res = 0;
+        for (auto [ch, v]: st[u].next) res += 1 + dfs_unique(v);
+        return dp_unique[u] = res;
+    }
+
+    string kth_unique(long long k) {
+        if (dp_unique.size() == 0) {
+            dp_unique.assign(st.size(), -1);
+            dfs_unique(0);
+        }
+        string ans = "";
+        int u = 0;
+        while (k > 0) {
+            for (auto &[ch, v]: st[u].next) {
+                int cnt = 1 + dp_unique[v];
+                if (k <= cnt) {
+                    ans += ch;
+                    k--;
+                    if (k == 0) return ans;
+                    u = v;
+                    break;
+                }
+                k -= cnt;
+            }
+        }
+        return ans;
+    }
+
+    int dfs_occ(int u) {
+        if (~dp_occ[u]) return dp_occ[u];
+        int res = 0;
+        for (auto &[ch, v]: st[u].next) res += st[v].cnt + dfs_occ(v);
+        return dp_occ[u] = res;
+    }
+
+    string kth_not_unique(int k) {
+        if (dp_occ.size() == 0)dp_occ.assign(st.size(), -1), dfs_occ(0);
+        int node = 0;
+        string ans = "";
+        while (k) {
+            for (auto [ch, nxt]: st[node].next) {
+                if (st[nxt].cnt >= k) {
+                    ans += ch;
+                    return ans;
+                }
+                k -= st[nxt].cnt;
+                if (dp_occ[nxt] >= k) {
+                    ans += ch;
+                    node = nxt;
+                    break;
+                }
+                k -= dp_occ[nxt];
+            }
+        }
+        return ans;
     }
 };
