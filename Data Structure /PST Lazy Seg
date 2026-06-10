@@ -1,0 +1,84 @@
+struct Node {
+    Node *l, *r;
+    int val = 0, lazy = 0;
+
+    Node() : l(nullptr), r(nullptr) {}
+    Node(int val) : l(nullptr), r(nullptr), val(val) {}
+    Node(Node *l, Node *r) : l(l), r(r) {
+        if (l) val += l->val;
+        if (r) val += r->val;
+    }
+};
+
+struct PST {
+    int n;
+    PST(int n) : n(n) {}
+
+    // ===================================================
+    // build: بتبني الشجرة الأولى من array
+    // كل leaf = قيمة العنصر
+    // كل internal node = sum of children
+    // ===================================================
+    Node *build(vector<int> &a, int lx, int rx) {
+        if (lx == rx) return new Node(a[lx]);
+        int mid = (lx + rx) >> 1;
+        return new Node(build(a, lx, mid), build(a, mid + 1, rx));
+    }
+    Node *build(vector<int> &a) { return build(a, 0, n - 1); }
+
+    // ===================================================
+    // update: range update [l, r] += val
+    // بنعمل نسخة من كل node في الـ path (persistent)
+    // مش بنعدل على القديم أبداً
+    //
+    // لما نوصل لـ node مغطي بالكامل [l,r]:
+    //   - نضيف val للـ lazy
+    //   - نحسب الـ val الجديد مباشرة (val + val * size)
+    //
+    // لما نوصل لـ node مش مغطي:
+    //   - نكوبي الـ node
+    //   - نحدث الـ val بتاعه بالجزء المتأثر بس
+    //   - نروح للـ children اللي محتاجة تتحدث
+    // ===================================================
+    Node *update(Node *v, int l, int r, int val, int lx, int rx) {
+        Node *node = new Node(v->l, v->r);
+        node->lazy = v->lazy;
+        node->val = v->val + (long long)val * (min(r, rx) - max(l, lx) + 1);
+        if (l <= lx && rx <= r) {
+            node->lazy += val;
+            return node;
+        }
+        int mid = (lx + rx) >> 1;
+        if (l <= mid) node->l = update(v->l, l, r, val, lx, mid);
+        if (r > mid)  node->r = update(v->r, l, r, val, mid + 1, rx);
+        return node;
+    }
+    Node *update(Node *v, int l, int r, int val) { return update(v, l, r, val, 0, n - 1); }
+
+    // ===================================================
+    // query: range sum [l, r]
+    // مش بنعمل pushdown لأن الـ children مشتركة بين versions
+    // بدل كده بنمرر الـ lazy من فوق لتحت كـ parameter
+    //
+    // lazy = مجموع كل الـ lazy من الـ ancestors فوقنا
+    //
+    // لما نوصل لـ node مغطي بالكامل:
+    //   - v->val = الـ sum الحقيقي لهذا الـ node بدون ancestors lazy
+    //   - lazy * size = تأثير الـ ancestors على هذا الـ node
+    //
+    // لما نوصل لـ node مش مغطي:
+    //   - نمرر (lazy + v->lazy) للـ children
+    //   يعني كل child هيشوف كل الـ lazy اللي فوقه
+    // ===================================================
+    long long query(Node *v, int l, int r, int lx, int rx, int lazy) {
+        if (l <= lx && rx <= r)
+            return v->val + (long long)lazy * (rx - lx + 1);
+        int mid = (lx + rx) >> 1;
+        long long res = 0;
+        int newlazy = lazy + v->lazy;
+        if (l <= mid) res += query(v->l, l, r, lx, mid, newlazy);
+        if (r > mid)  res += query(v->r, l, r, mid + 1, rx, newlazy);
+        return res;
+    }
+    long long query(Node *v, int l, int r) { return query(v, l, r, 0, n - 1, 0); }
+};
