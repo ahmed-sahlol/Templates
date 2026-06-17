@@ -52,6 +52,28 @@ ll CRT(vector<ll>& a, vector<ll>& m) {
     return ans;
 }
 
+// returns {x, lcm(m1,m2)}, or {-1,-1} if impossible
+pair<ll, ll> merge_crt(ll a1, ll m1, ll a2, ll m2) {
+    ll x, y;
+    ll g = ext_gcd(m1, m2, x, y);
+ 
+    if ((a2 - a1) % g != 0) return {-1, -1};
+ 
+    ll lcm = m1 / g * m2;
+ 
+    ll k = (a2 - a1) / g;
+ 
+    x = (x % (m2 / g) + (m2 / g)) % (m2 / g);
+ 
+    ll add = (k % (m2 / g) + (m2 / g)) % (m2 / g);
+    x = (x * add) % (m2 / g);
+ 
+    ll res = (a1 + m1 * x) % lcm;
+    if (res < 0) res += lcm;
+ 
+    return {res, lcm};
+}
+
 int main() {
     vector<ll> a = {2, 3, 2};
     vector<ll> m = {3, 5, 7};
