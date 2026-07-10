@@ -79,5 +79,22 @@ int main() {
     vector<ll> m = {3, 5, 7};
     ///  CRT(a, m) = a[i] % m[i] 
 
+
+             ll a = 0, m = 1;
+            bool ok = true;
+ 
+            for (int i = L; i <= R; i++) {
+                auto res = merge_crt(a, m, A[i], M[i]);
+                if (res.first == -1) {
+                    ok = false;
+                    break;
+                }
+                a = res.first;
+                m = res.second;
+            }
+ 
+            if (!ok) cout << -1 << "\n";
+            else cout << a << "\n";
+    
     cout << CRT(a, m) << '\n'; // 23
 }
